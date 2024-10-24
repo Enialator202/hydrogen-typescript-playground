@@ -1,21 +1,32 @@
 import {Suspense} from 'react';
+// Suspense from React, used for handling async components and showing fallback content while waiting for data.
+
 import {Await, NavLink, useAsyncValue} from '@remix-run/react';
+// Await for handling promises within Suspense, NavLink for navigation, useAsyncValue for getting resolved async data.
+
 import {
   type CartViewPayload,
   useAnalytics,
   useOptimisticCart,
 } from '@shopify/hydrogen';
+// Importing types and utilities from Shopify's Hydrogen framework.
+// CartViewPayload is a type definition, useAnalytics for event tracking, useOptimisticCart for optimistic cart updates.
+
 import type {HeaderQuery, CartApiQueryFragment} from 'storefrontapi.generated';
+// Importing GraphQL-generated types for HeaderQuery and CartApiQueryFragment from the storefront API.
+
 import {useAside} from '~/components/Aside';
+// Custom hook, useAside, which is likely used to open or close a side navigation or modal.
 
 interface HeaderProps {
-  header: HeaderQuery;
-  cart: Promise<CartApiQueryFragment | null>;
-  isLoggedIn: Promise<boolean>;
-  publicStoreDomain: string;
+  header: HeaderQuery; // Data for the header, containing shop and menu info.
+  cart: Promise<CartApiQueryFragment | null>; // Async cart data, potentially null.
+  isLoggedIn: Promise<boolean>; // Async flag indicating if the user is logged in.
+  publicStoreDomain: string; // The public domain for the store, used for URL handling.
 }
 
-type Viewport = 'desktop' | 'mobile';
+type Viewport = 'desktop' | 'mobile'; 
+// Defines the viewport type, which determines if the menu is for desktop or mobile.
 
 export function Header({
   header,
@@ -23,18 +34,23 @@ export function Header({
   cart,
   publicStoreDomain,
 }: HeaderProps) {
-  const {shop, menu} = header;
+  const {shop, menu} = header; // Destructuring shop and menu from header data.
   return (
     <header className="header">
+      {/* Link to the homepage, displays the shop name */}
       <NavLink prefetch="intent" to="/" style={activeLinkStyle} end>
         <strong>{shop.name}</strong>
       </NavLink>
+
+      {/* Render the header menu for desktop, passing in necessary props */}
       <HeaderMenu
         menu={menu}
         viewport="desktop"
         primaryDomainUrl={header.shop.primaryDomain.url}
         publicStoreDomain={publicStoreDomain}
       />
+
+      {/* Render the call-to-actions section (e.g., account, cart, search) */}
       <HeaderCtas isLoggedIn={isLoggedIn} cart={cart} />
     </header>
   );
@@ -46,20 +62,21 @@ export function HeaderMenu({
   viewport,
   publicStoreDomain,
 }: {
-  menu: HeaderProps['header']['menu'];
-  primaryDomainUrl: HeaderProps['header']['shop']['primaryDomain']['url'];
-  viewport: Viewport;
-  publicStoreDomain: HeaderProps['publicStoreDomain'];
+  menu: HeaderProps['header']['menu']; // The menu data.
+  primaryDomainUrl: HeaderProps['header']['shop']['primaryDomain']['url']; // The primary domain of the shop.
+  viewport: Viewport; // Viewport type (desktop or mobile).
+  publicStoreDomain: HeaderProps['publicStoreDomain']; // Public domain of the store.
 }) {
-  const className = `header-menu-${viewport}`;
-  const {close} = useAside();
+  const className = `header-menu-${viewport}`; // Sets the CSS class based on the viewport.
+  const {close} = useAside(); // Custom hook for closing the aside (likely a modal or navigation panel).
 
   return (
     <nav className={className} role="navigation">
+      {/* If in mobile viewport, render a 'Home' link */}
       {viewport === 'mobile' && (
         <NavLink
           end
-          onClick={close}
+          onClick={close} // Close the mobile menu when clicking the link.
           prefetch="intent"
           style={activeLinkStyle}
           to="/"
@@ -67,25 +84,28 @@ export function HeaderMenu({
           Home
         </NavLink>
       )}
-      {(menu || FALLBACK_HEADER_MENU).items.map((item) => {
-        if (!item.url) return null;
 
-        // if the url is internal, we strip the domain
+      {/* Render the menu items */}
+      {(menu || FALLBACK_HEADER_MENU).items.map((item) => {
+        if (!item.url) return null; // Skip items without a URL.
+
+        // If the URL is internal, strip the domain and keep the path.
         const url =
           item.url.includes('myshopify.com') ||
           item.url.includes(publicStoreDomain) ||
           item.url.includes(primaryDomainUrl)
             ? new URL(item.url).pathname
             : item.url;
+
         return (
           <NavLink
             className="header-menu-item"
             end
             key={item.id}
-            onClick={close}
+            onClick={close} // Close the menu when an item is clicked.
             prefetch="intent"
-            style={activeLinkStyle}
-            to={url}
+            style={activeLinkStyle} // Apply style depending on active state.
+            to={url} // Use the processed URL for the link.
           >
             {item.title}
           </NavLink>
@@ -101,7 +121,10 @@ function HeaderCtas({
 }: Pick<HeaderProps, 'isLoggedIn' | 'cart'>) {
   return (
     <nav className="header-ctas" role="navigation">
+      {/* Mobile menu toggle button */}
       <HeaderMenuMobileToggle />
+
+      {/* Account link, toggles between 'Sign in' and 'Account' based on login state */}
       <NavLink prefetch="intent" to="/account" style={activeLinkStyle}>
         <Suspense fallback="Sign in">
           <Await resolve={isLoggedIn} errorElement="Sign in">
@@ -109,18 +132,22 @@ function HeaderCtas({
           </Await>
         </Suspense>
       </NavLink>
+
+      {/* Search button */}
       <SearchToggle />
+
+      {/* Cart button */}
       <CartToggle cart={cart} />
     </nav>
   );
 }
 
 function HeaderMenuMobileToggle() {
-  const {open} = useAside();
+  const {open} = useAside(); // Using useAside to open the mobile menu.
   return (
     <button
       className="header-menu-mobile-toggle reset"
-      onClick={() => open('mobile')}
+      onClick={() => open('mobile')} // Opens the mobile menu when clicked.
     >
       <h3>☰</h3>
     </button>
@@ -128,7 +155,7 @@ function HeaderMenuMobileToggle() {
 }
 
 function SearchToggle() {
-  const {open} = useAside();
+  const {open} = useAside(); // Using useAside to open the search.
   return (
     <button className="reset" onClick={() => open('search')}>
       Search
@@ -137,42 +164,42 @@ function SearchToggle() {
 }
 
 function CartBadge({count}: {count: number | null}) {
-  const {open} = useAside();
-  const {publish, shop, cart, prevCart} = useAnalytics();
+  const {open} = useAside(); // Using useAside to open the cart.
+  const {publish, shop, cart, prevCart} = useAnalytics(); // Use analytics for cart view tracking.
 
   return (
     <a
       href="/cart"
       onClick={(e) => {
         e.preventDefault();
-        open('cart');
+        open('cart'); // Open cart modal when clicked.
         publish('cart_viewed', {
           cart,
           prevCart,
           shop,
-          url: window.location.href || '',
+          url: window.location.href || '', // Publish analytics event.
         } as CartViewPayload);
       }}
     >
-      Cart {count === null ? <span>&nbsp;</span> : count}
+      Cart {count === null ? <span>&nbsp;</span> : count} {/* Display cart item count */}
     </a>
   );
 }
 
 function CartToggle({cart}: Pick<HeaderProps, 'cart'>) {
   return (
-    <Suspense fallback={<CartBadge count={null} />}>
+    <Suspense fallback={<CartBadge count={null} />}> {/* Fallback shows empty cart badge */}
       <Await resolve={cart}>
-        <CartBanner />
+        <CartBanner /> {/* Show cart content when resolved */}
       </Await>
     </Suspense>
   );
 }
 
 function CartBanner() {
-  const originalCart = useAsyncValue() as CartApiQueryFragment | null;
-  const cart = useOptimisticCart(originalCart);
-  return <CartBadge count={cart?.totalQuantity ?? 0} />;
+  const originalCart = useAsyncValue() as CartApiQueryFragment | null; // Async value from cart.
+  const cart = useOptimisticCart(originalCart); // Use optimistic cart to handle cart changes.
+  return <CartBadge count={cart?.totalQuantity ?? 0} />; // Show total item count in the cart.
 }
 
 const FALLBACK_HEADER_MENU = {
