@@ -191,6 +191,40 @@ button.reset:hover:not(:has(> *)) {
   margin-left: auto;
 }
 
+.header-icon {
+  width: 50px;
+  display: inline;
+}
+
+.header-count {
+  position: relative;
+  display: inline;
+}
+
+.cart-container {
+  position: relative;
+  display: inline-block; /* Allows positioning within the button */
+}
+
+.cart-icon {
+  width: 2rem;
+  font-size: 24px; /* Adjust size as needed */
+  cursor: pointer;
+}
+
+.cart-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background-color: red;
+  color: white;
+  border-radius: 50%;
+  padding: 2px 6px;
+  font-size: 12px;
+  font-weight: bold;
+  line-height: 1;
+}
+
 /*
 * --------------------------------------------------
 * components/Footer
@@ -266,6 +300,19 @@ button.reset:hover:not(:has(> *)) {
   align-items: center;
   display: flex;
 }
+
+.account-icon {
+  width: 1rem;
+}
+
+.search-icon {
+  width: 1rem;
+}
+
+.cart-icon {
+  width: 1.3rem;
+}
+
 /*
 * --------------------------------------------------
 * components/Search
