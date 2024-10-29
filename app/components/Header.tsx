@@ -1,7 +1,7 @@
 import {Suspense} from 'react';
 // Suspense from React, used for handling async components and showing fallback content while waiting for data.
 
-import {Await, NavLink, useAsyncValue} from '@remix-run/react';
+import {Await, NavLink, useAsyncValue, Link} from '@remix-run/react';
 // Await for handling promises within Suspense, NavLink for navigation, useAsyncValue for getting resolved async data.
 
 import {
@@ -17,6 +17,17 @@ import type {HeaderQuery, CartApiQueryFragment} from 'storefrontapi.generated';
 
 import {useAside} from '~/components/Aside';
 // Custom hook, useAside, which is likely used to open or close a side navigation or modal.
+
+import {
+  SEARCH_ENDPOINT,
+  SearchFormPredictive,
+} from '~/components/SearchFormPredictive';
+// Predictive search components for handling search form input and displaying search results.
+
+import {SearchResultsPredictive} from '~/components/SearchResultsPredictive';
+// Component to display predictive search results based on user input.
+
+import { useId } from 'react'; // Import useId for generating unique IDs
 
 interface HeaderProps {
   header: HeaderQuery; // Data for the header, containing shop and menu info.
@@ -37,11 +48,6 @@ export function Header({
   const {shop, menu} = header; // Destructuring shop and menu from header data.
   return (
     <header className="header">
-      {/* Link to the homepage, displays the shop name */}
-      <NavLink prefetch="intent" to="/" style={activeLinkStyle} end>
-        <strong>{shop.name}</strong>
-      </NavLink>
-
       {/* Render the header menu for desktop, passing in necessary props */}
       <HeaderMenu
         menu={menu}
@@ -49,6 +55,11 @@ export function Header({
         primaryDomainUrl={header.shop.primaryDomain.url}
         publicStoreDomain={publicStoreDomain}
       />
+
+      {/* Link to the homepage, displays the shop name
+      <NavLink prefetch="intent" to="/" style={activeLinkStyle} end>
+        <strong>{shop.name}</strong>
+      </NavLink> */}
 
       {/* Render the call-to-actions section (e.g., account, cart, search) */}
       <HeaderCtas isLoggedIn={isLoggedIn} cart={cart} />
@@ -119,6 +130,8 @@ function HeaderCtas({
   isLoggedIn,
   cart,
 }: Pick<HeaderProps, 'isLoggedIn' | 'cart'>) {
+  const queriesDatalistId = useId(); // Generates a unique ID for the datalist element in the search form.
+
   return (
     <nav className="header-ctas" role="navigation">
       {/* Mobile menu toggle button */}
@@ -126,19 +139,109 @@ function HeaderCtas({
 
       {/* Account link, toggles between 'Sign in' and 'Account' based on login state */}
       <NavLink prefetch="intent" to="/account" style={activeLinkStyle}>
-        <Suspense fallback="Sign in">
+        {/* <Suspense fallback="Sign in">
           <Await resolve={isLoggedIn} errorElement="Sign in">
-          <svg className="account-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
-          <path d="M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512l388.6 0c16.4 0 29.7-13.3 29.7-29.7C448 383.8 368.2 304 269.7 304l-91.4 0z"/></svg>
+            
+            {(isLoggedIn) => (isLoggedIn ? 'Account' : 'Sign in')}
+          </Await>
+        </Suspense> */}
+        <svg className="account-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512l388.6 0c16.4 0 29.7-13.3 29.7-29.7C448 383.8 368.2 304 269.7 304l-91.4 0z"/></svg>
+      </NavLink>
+
+     
+
+      {/* Predictive Search form (always visible) */}
+      <div className="search-bar">
+        <SearchFormPredictive>
+          {({fetchResults, goToSearch, inputRef}) => (
+            <>
+              <input
+                name="q"
+                className="input"
+                autoComplete="off"
+                onChange={fetchResults}
+                onFocus={fetchResults}
+                placeholder="Try 'Red Jeans'"
+                ref={inputRef}
+                type="search"
+                list={queriesDatalistId}
+              />
+              <div className="tag">Search</div> {/* Tag element */}
+            </>
+          )}
+        </SearchFormPredictive>
+
+        {/* Display predictive search results */}
+        <SearchResultsPredictive>
+          {({items, total, term, state, closeSearch}) => {
+            const {articles, collections, pages, products, queries} = items;
+
+            if (state === 'loading' && term.current) {
+              return <div>Loading...</div>;
+            }
+
+            if (!total) {
+              return <SearchResultsPredictive.Empty term={term} />;
+            }
+
+            return (
+              <>
+                <SearchResultsPredictive.Queries
+                  queries={queries}
+                  queriesDatalistId={queriesDatalistId}
+                />
+                <SearchResultsPredictive.Products
+                  products={products}
+                  closeSearch={closeSearch}
+                  term={term}
+                />
+                <SearchResultsPredictive.Collections
+                  collections={collections}
+                  closeSearch={closeSearch}
+                  term={term}
+                />
+                <SearchResultsPredictive.Pages
+                  pages={pages}
+                  closeSearch={closeSearch}
+                  term={term}
+                />
+                <SearchResultsPredictive.Articles
+                  articles={articles}
+                  closeSearch={closeSearch}
+                  term={term}
+                />
+                {term.current && total ? (
+                  <Link
+                    onClick={closeSearch}
+                    to={`${SEARCH_ENDPOINT}?q=${term.current}`}
+                  >
+                    <p>
+                      View all results for <q>{term.current}</q>
+                      &nbsp; →
+                    </p>
+                  </Link>
+                ) : null}
+              </>
+            );
+          }}
+        </SearchResultsPredictive>
+      </div>
+
+       {/* Cart link, showing item count when available */}
+       <NavLink prefetch="intent" to="/cart" style={activeLinkStyle}>
+        <Suspense fallback="Cart">
+          <Await resolve={cart} errorElement="Cart">
+            {(cartData) => (
+              <div className="cart-cta">
+                <svg className="cart-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><path d="M0 24C0 10.7 10.7 0 24 0L69.5 0c22 0 41.5 12.8 50.6 32l411 0c26.3 0 45.5 25 38.6 50.4l-41 152.3c-8.5 31.4-37 53.3-69.5 53.3l-288.5 0 5.4 28.5c2.2 11.3 12.1 19.5 23.6 19.5L488 336c13.3 0 24 10.7 24 24s-10.7 24-24 24l-288.3 0c-34.6 0-64.3-24.6-70.7-58.5L77.4 54.5c-.7-3.8-4-6.5-7.9-6.5L24 48C10.7 48 0 37.3 0 24zM128 464a48 48 0 1 1 96 0 48 48 0 1 1 -96 0zm336-48a48 48 0 1 1 0 96 48 48 0 1 1 0-96z"/></svg>
+                {cartData && cartData.totalQuantity > 0 && (
+                  <span className="cart-count">{cartData.totalQuantity}</span>
+                )}
+              </div>
+            )}
           </Await>
         </Suspense>
       </NavLink>
-
-      {/* Search button */}
-      <SearchToggle />
-
-      {/* Cart button */}
-      <CartToggle cart={cart} />
     </nav>
   );
 }
@@ -159,8 +262,8 @@ function SearchToggle() {
   const {open} = useAside(); // Using useAside to open the search.
   return (
     <button className="reset" onClick={() => open('search')}>
-      <svg className="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-      <path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z"/></svg>
+      {/* <svg className="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+      <path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z"/></svg> */}
     </button>
   );
 }

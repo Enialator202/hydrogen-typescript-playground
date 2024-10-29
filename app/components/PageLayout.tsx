@@ -62,15 +62,7 @@ export function PageLayout({
       {/* Mobile menu aside for mobile navigation */}
       <MobileMenuAside header={header} publicStoreDomain={publicStoreDomain} />
       
-      {/* Header at the top, passing header, cart, and login state */}
-      {header && (
-        <Header
-          header={header}
-          cart={cart}
-          isLoggedIn={isLoggedIn}
-          publicStoreDomain={publicStoreDomain}
-        />
-      )}
+      
       
       {/* Main content area */}
       <main>{children}</main>
@@ -81,6 +73,16 @@ export function PageLayout({
         header={header}
         publicStoreDomain={publicStoreDomain}
       />
+
+      {/* Header at the top, passing header, cart, and login state */}
+      {header && (
+        <Header
+          header={header}
+          cart={cart}
+          isLoggedIn={isLoggedIn}
+          publicStoreDomain={publicStoreDomain}
+        />
+      )}
     </Aside.Provider>
   );
 }

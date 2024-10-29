@@ -49,11 +49,12 @@ export function SearchForm({children, ...props}: SearchFormProps) {
   }
 
   return (
-    <Form method="get" {...props}>
-      {/* Render the Form element with a GET method and pass any additional props. */}
-      {children({inputRef})}
-      {/* Call the children function and pass the inputRef to it. This lets the children manage the input field. */}
-    </Form>
+    <div></div>
+    // <Form method="get" {...props}>
+    //   {/* Render the Form element with a GET method and pass any additional props. */}
+    //   {children({inputRef})}
+    //   {/* Call the children function and pass the inputRef to it. This lets the children manage the input field. */}
+    // </Form>
   );
 }
 
