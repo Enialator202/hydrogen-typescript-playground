@@ -144,7 +144,7 @@ function SearchResultsPredictiveCollections({
   return (
     <div className="predictive-search-result" key="collections">
       <h5>Collections</h5>
-      <ul>
+      <ul className="predictive-search-result__modal">
         {collections.map((collection) => { // Map over the list of collections
           const collectionUrl = urlWithTrackingParams({
             baseUrl: `/collections/${collection.handle}`, // Construct URL for the collection
@@ -189,7 +189,7 @@ function SearchResultsPredictivePages({
   return (
     <div className="predictive-search-result" key="pages">
       <h5>Pages</h5> {/* Header for the pages section */}
-      <ul>
+      <ul className="predictive-search-result__modal">
         {pages.map((page) => { // Map over the list of pages
           const pageUrl = urlWithTrackingParams({
             baseUrl: `/pages/${page.handle}`, // Construct the URL for the page
@@ -226,7 +226,7 @@ function SearchResultsPredictiveProducts({
   return (
     <div className="predictive-search-result" key="products">
       <h5>Products</h5> {/* Header for the products section */}
-      <ul>
+      <ul className="predictive-search-result__modal">
         {products.map((product) => { // Map over the list of products
           const productUrl = urlWithTrackingParams({
             baseUrl: `/products/${product.handle}`, // Construct the URL for the product
